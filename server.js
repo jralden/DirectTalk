@@ -1,6 +1,8 @@
 'use strict';
 
 const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
 const sessions = require('./sessions');
 
 const PORT = Number(process.env.PORT) || 5757;
@@ -179,6 +181,15 @@ async function handler(req, res) {
         broadcast(id, rec);
         return sendJson(res, 201, rec);
       }
+    }
+
+    // Static landing page. Placed AFTER all /api branches so it never shadows
+    // an API route, and BEFORE the trailing 404. LAN tool, tiny file: read it
+    // per request (no caching needed).
+    if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+      const html = fs.readFileSync(path.join(__dirname, 'index.html'));
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
     }
 
     return sendJson(res, 404, { error: 'not found' });
