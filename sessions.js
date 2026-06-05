@@ -63,7 +63,7 @@ function listSessions() {
       const firstLine = content.split('\n').find((l) => l.trim().length > 0);
       if (!firstLine) continue;
       const meta = JSON.parse(firstLine);
-      if (meta && meta.type === 'meta') {
+      if (meta && meta.type === 'meta' && typeof meta.name === 'string') {
         out.push({
           id: fname.replace(/\.jsonl$/, ''),
           name: meta.name,
@@ -114,6 +114,7 @@ function readSession(id) {
       messages.push(rec);
     }
   }
+  if (!meta) return null;
   return { meta, messages };
 }
 
