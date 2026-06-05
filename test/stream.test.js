@@ -10,7 +10,24 @@ const { spawn } = require('node:child_process');
 const sessions = require('../sessions');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const PORT = '5913';
+// Dynamically assigned per spawned server (IN-01): a hard-coded port is
+// flaky under parallel runs / leftover processes. start() picks a free
+// ephemeral port and sets PORT before launching the child.
+let PORT = '0';
+
+// Bind a throwaway listener to port 0, read the OS-assigned port, then
+// release it. Brief reuse race is acceptable for a test harness and far
+// less flaky than a fixed port.
+function findFreePort() {
+  return new Promise((resolve, reject) => {
+    const srv = http.createServer();
+    srv.on('error', reject);
+    srv.listen(0, '127.0.0.1', () => {
+      const p = srv.address().port;
+      srv.close(() => resolve(String(p)));
+    });
+  });
+}
 
 let createdId = null;
 const createdIds = [];
@@ -52,7 +69,8 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function start() {
+async function start() {
+  PORT = await findFreePort();
   const proc = spawn('node', ['server.js'], {
     env: { ...process.env, PORT },
     cwd: REPO_ROOT,
@@ -107,7 +125,7 @@ after(async () => {
 });
 
 test('SSE replays transcript then pushes live messages', async () => {
-  const srv = start();
+  const srv = await start();
   assert.ok(await waitReady(), 'server never became ready');
 
   const created = await post('/api/sessions', JSON.stringify({ name: 'Stream Test ' + Date.now() }));
@@ -165,7 +183,7 @@ test('SSE replays transcript then pushes live messages', async () => {
 // message into an at-most-once duplicate; the monotonic `seq` lets a client
 // drop the boundary duplicate cleanly.
 test('boundary POST during connect is delivered exactly once (seq dedupe)', async () => {
-  const srv = start();
+  const srv = await start();
   assert.ok(await waitReady(), 'server never became ready');
 
   const created = await post('/api/sessions', JSON.stringify({ name: 'Boundary Test ' + Date.now() }));
