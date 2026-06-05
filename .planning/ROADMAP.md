@@ -36,7 +36,8 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
   3. Messages originating from `localhost`/`127.0.0.1` are labeled Host; all others are labeled Client.
   4. ANSI escape codes in incoming text are stripped before storage and display, and multi-line text retains its line breaks and indentation.
   5. The host reaches the server via `localhost` and client Macs reach it via `<host>.local` on the LAN with no IP entry.
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 02-01-PLAN.md — SSE stream (replay-then-live) + POST messages (role detection, ANSI/multiline fidelity, broadcast) + LAN access doc
 
 ### Phase 3: Browser UI
 **Goal**: Users on any Mac can pick or create a session, read the live transcript, send messages, and see connection status — all in one browser page with zero install.
@@ -55,8 +56,8 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Server & Session Persistence | 1/1 | Complete | 2026-06-05 |
-| 2. Live Messaging & Text Fidelity | 0/0 | Not started | - |
+| 2. Live Messaging & Text Fidelity | 0/1 | Planned | - |
 | 3. Browser UI | 0/0 | Not started | - |
 
 ---
-*Last updated: 2026-06-05 after phase 1 plan 01 execution*
+*Last updated: 2026-06-05 after phase 2 planning*
