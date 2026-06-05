@@ -76,6 +76,15 @@ test('appendMessage appends a msg record', () => {
   assert.ok(rec.ts);
 });
 
+test('appendMessage strips ANSI escape sequences before storage', () => {
+  const s = track(sessions.createSession('Ansi Target'));
+  const rec = sessions.appendMessage(s.id, 'host', '\x1b[32mgreen\x1b[0m text');
+  assert.equal(rec.text, 'green text');
+
+  const content = fs.readFileSync(sessions.sessionPath(s.id), 'utf8');
+  assert.ok(!content.includes('\x1b'), 'raw ANSI persisted to disk');
+});
+
 test('readSession returns {meta,messages} for all appended lines; null for unknown', () => {
   const s = track(sessions.createSession('Read Target'));
   sessions.appendMessage(s.id, 'host', 'first');

@@ -72,8 +72,16 @@ function listSessions() {
   return out;
 }
 
+// Matches CSI sequences (e.g. \x1b[32m color codes) for server-side stripping.
+const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]/g;
+
+function stripAnsi(text) {
+  return String(text).replace(ANSI_RE, '');
+}
+
 function appendMessage(id, side, text) {
-  const rec = { type: 'msg', side, text, ts: new Date().toISOString() };
+  const clean = stripAnsi(text);
+  const rec = { type: 'msg', side, text: clean, ts: new Date().toISOString() };
   fs.appendFileSync(sessionPath(id), JSON.stringify(rec) + '\n');
   return rec;
 }
@@ -104,6 +112,7 @@ module.exports = {
   SESSIONS_DIR,
   ensureSessionsDir,
   sessionPath,
+  stripAnsi,
   createSession,
   listSessions,
   appendMessage,
