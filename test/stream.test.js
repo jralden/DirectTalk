@@ -13,6 +13,7 @@ const REPO_ROOT = path.join(__dirname, '..');
 const PORT = '5913';
 
 let createdId = null;
+const createdIds = [];
 const procs = [];
 
 function get(pathname) {
@@ -102,7 +103,7 @@ function parseFrames(buf) {
 
 after(async () => {
   for (const p of procs) await stop(p);
-  if (createdId) fs.rmSync(sessions.sessionPath(createdId), { force: true });
+  for (const id of createdIds) fs.rmSync(sessions.sessionPath(id), { force: true });
 });
 
 test('SSE replays transcript then pushes live messages', async () => {
@@ -113,6 +114,7 @@ test('SSE replays transcript then pushes live messages', async () => {
   assert.equal(created.status, 201);
   createdId = JSON.parse(created.body).id;
   assert.ok(createdId);
+  createdIds.push(createdId);
 
   // Stored transcript to be replayed on connect.
   const firstPost = await post('/api/sessions/' + createdId + '/messages', JSON.stringify({ text: 'first' }));
@@ -153,6 +155,71 @@ test('SSE replays transcript then pushes live messages', async () => {
   const idxLive = frames.findIndex((f) => f.text === 'live');
   assert.ok(idxFirst >= 0 && idxLive >= 0);
   assert.ok(idxFirst < idxLive, 'replay frame must precede live frame');
+
+  streamReq.destroy();
+  await stop(srv);
+});
+
+// CR-01: a message POSTed during/around connect must be delivered exactly
+// once after dedupe, and never lost. Register-first turns a would-be lost
+// message into an at-most-once duplicate; the monotonic `seq` lets a client
+// drop the boundary duplicate cleanly.
+test('boundary POST during connect is delivered exactly once (seq dedupe)', async () => {
+  const srv = start();
+  assert.ok(await waitReady(), 'server never became ready');
+
+  const created = await post('/api/sessions', JSON.stringify({ name: 'Boundary Test ' + Date.now() }));
+  assert.equal(created.status, 201);
+  const boundaryId = JSON.parse(created.body).id;
+  assert.ok(boundaryId);
+  createdIds.push(boundaryId);
+
+  // Pre-seed one stored message so replay has content.
+  assert.equal(
+    (await post('/api/sessions/' + boundaryId + '/messages', JSON.stringify({ text: 'seed' }))).status,
+    201
+  );
+
+  // Open the SSE stream and, without awaiting connect, fire a concurrent
+  // POST so it races the snapshot/registration window.
+  let buf = '';
+  const streamReq = http.request(
+    { host: '127.0.0.1', port: Number(PORT), method: 'GET', path: '/api/sessions/' + boundaryId + '/stream' },
+    (res) => {
+      assert.equal(res.statusCode, 200);
+      res.on('data', (c) => (buf += c));
+    }
+  );
+  streamReq.end();
+  // Do NOT await connect before posting -- this is the race window.
+  const boundaryPost = post('/api/sessions/' + boundaryId + '/messages', JSON.stringify({ text: 'boundary' }));
+  assert.equal((await boundaryPost).status, 201);
+
+  async function waitForText(text, timeoutMs = 3000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      if (parseFrames(buf).some((f) => f.text === text)) return true;
+      await sleep(50);
+    }
+    return false;
+  }
+
+  // Never lost: the boundary message must arrive (via replay or live).
+  assert.ok(await waitForText('boundary'), 'boundary message was lost');
+
+  // Every record carries a monotonic numeric seq.
+  const frames = parseFrames(buf);
+  for (const f of frames) {
+    assert.equal(typeof f.seq, 'number', 'record missing numeric seq');
+  }
+
+  // After deduping by seq the boundary message appears exactly once (a
+  // boundary duplicate, if the race produced one, collapses to a single
+  // record because replay and live share the same positional seq).
+  const bySeq = new Map();
+  for (const f of frames) bySeq.set(f.seq, f);
+  const boundaryRecs = [...bySeq.values()].filter((f) => f.text === 'boundary');
+  assert.equal(boundaryRecs.length, 1, 'boundary message not exactly once after seq dedupe');
 
   streamReq.destroy();
   await stop(srv);

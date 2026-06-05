@@ -76,18 +76,31 @@ async function handler(req, res) {
       const sub = m[2];
 
       if (req.method === 'GET' && sub === 'stream') {
-        const data = sessions.readSession(id);
-        if (!data) return sendJson(res, 404, { error: 'not found' });
+        // 404 guard before committing to the SSE response.
+        if (!sessions.readSession(id)) {
+          return sendJson(res, 404, { error: 'not found' });
+        }
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           Connection: 'keep-alive',
         });
+
+        // Register the subscriber BEFORE snapshotting/replaying. A POST that
+        // lands in this window is then delivered as a LIVE frame instead of
+        // being lost between the snapshot read and registration (CR-01). It
+        // may also appear in the replay snapshot, producing a boundary
+        // duplicate -- but every record carries a monotonic `seq`, so the
+        // client dedupes by seq and sees each message exactly once. A lost
+        // message is unrecoverable; a duplicate is not.
+        if (!subscribers.has(id)) subscribers.set(id, new Set());
+        subscribers.get(id).add(res);
+
+        // Snapshot + replay AFTER registration.
+        const data = sessions.readSession(id);
         for (const msg of data.messages) {
           res.write('data: ' + JSON.stringify(msg) + '\n\n');
         }
-        if (!subscribers.has(id)) subscribers.set(id, new Set());
-        subscribers.get(id).add(res);
         const hb = setInterval(() => {
           try {
             res.write(':\n\n');

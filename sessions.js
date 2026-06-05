@@ -85,12 +85,36 @@ function stripAnsi(text) {
   return String(text).replace(ANSI_RE, '');
 }
 
+// Count the msg records already stored for a session. Used to derive the
+// next monotonic seq so that the seq assigned at append time matches the
+// seq assigned by readSession's position enumeration (replay/live dedupe).
+function countMessages(id) {
+  if (!fs.existsSync(sessionPath(id))) return 0;
+  const content = fs.readFileSync(sessionPath(id), 'utf8');
+  const lines = content.split('\n').filter((l) => l.trim().length > 0);
+  let n = 0;
+  for (const line of lines) {
+    let rec;
+    try {
+      rec = JSON.parse(line);
+    } catch (err) {
+      continue;
+    }
+    if (rec.type === 'msg') n += 1;
+  }
+  return n;
+}
+
 function appendMessage(id, side, text) {
   if (!fs.existsSync(sessionPath(id))) {
     throw new Error('unknown session: ' + id);
   }
   const clean = stripAnsi(text);
-  const rec = { type: 'msg', side, text: clean, ts: new Date().toISOString() };
+  // seq = position of this record among msg records (0-based). Derived from
+  // current on-disk count, so it equals the seq readSession assigns on
+  // replay. Stored in the JSONL line; Phase 1 readers tolerate extra fields.
+  const seq = countMessages(id);
+  const rec = { type: 'msg', seq, side, text: clean, ts: new Date().toISOString() };
   fs.appendFileSync(sessionPath(id), JSON.stringify(rec) + '\n');
   return rec;
 }
@@ -111,7 +135,10 @@ function readSession(id) {
     if (rec.type === 'meta' && !meta) {
       meta = { id, name: rec.name, createdAt: rec.createdAt };
     } else if (rec.type === 'msg') {
-      messages.push(rec);
+      // Assign seq by position so replayed records carry the same seq the
+      // live broadcast emitted (records written before seq existed get a
+      // backfilled positional seq, keeping dedupe unambiguous).
+      messages.push(Object.assign({}, rec, { seq: messages.length }));
     }
   }
   if (!meta) return null;
