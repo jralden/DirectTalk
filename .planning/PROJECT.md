@@ -14,6 +14,16 @@ The ONE thing that must work: text pasted into the entry box on any connected Ma
 appears, intact and formatted, in the transcript on every connected Mac — live, with no
 accounts and no install on the client Macs.
 
+## Current State
+
+**Shipped: v1.0 (2026-06-06)** — fully working MVP. `server.js` + `sessions.js` + `index.html`
+(~778 lines, zero npm dependencies). Host runs `node server.js`; everyone opens
+`http://<host>.local:5757`. Session create/list/resume, live SSE transcript sync, Host/Client
+labeling, ANSI stripping, multi-line fidelity, reconnect-safe `seq` dedupe. 29/29 automated
+tests pass; verified live across two Macs. See [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md).
+
+**Next milestone:** none planned. Run `/gsd-new-milestone` for the next round.
+
 ## Context
 
 - Author develops almost exclusively via Claude Code, often driving installs/updates/
