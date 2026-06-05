@@ -23,7 +23,8 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
   2. A POST to `/api/sessions` with a name creates a new session and writes a JSONL meta line to `sessions/<id>.jsonl`.
   3. A GET to `/api/sessions` returns the list of existing sessions (id, name, createdAt) by scanning `sessions/`.
   4. After stopping and restarting the server, previously created sessions and their stored messages are still present and readable.
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 01-01-PLAN.md — sessions.js persistence module + node:http server (create/list sessions, JSONL persistence, restart survival)
 
 ### Phase 2: Live Messaging & Text Fidelity
 **Goal**: Text posted from any browser appears live in every connected browser, intact and correctly attributed, with terminal output rendered cleanly.
@@ -53,9 +54,9 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Server & Session Persistence | 0/0 | Not started | - |
+| 1. Server & Session Persistence | 0/1 | Planned | - |
 | 2. Live Messaging & Text Fidelity | 0/0 | Not started | - |
 | 3. Browser UI | 0/0 | Not started | - |
 
 ---
-*Last updated: 2026-06-05 at roadmap creation*
+*Last updated: 2026-06-05 at phase 1 planning*
