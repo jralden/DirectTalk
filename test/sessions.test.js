@@ -76,6 +76,15 @@ test('appendMessage appends a msg record', () => {
   assert.ok(rec.ts);
 });
 
+test('appendMessage throws for an unknown session (no orphan file)', () => {
+  const missingId = 'no-such-session-' + Date.now();
+  assert.throws(
+    () => sessions.appendMessage(missingId, 'host', 'hi'),
+    /unknown session/
+  );
+  assert.ok(!fs.existsSync(sessions.sessionPath(missingId)), 'orphan file created');
+});
+
 test('appendMessage strips ANSI escape sequences before storage', () => {
   const s = track(sessions.createSession('Ansi Target'));
   const rec = sessions.appendMessage(s.id, 'host', '\x1b[32mgreen\x1b[0m text');

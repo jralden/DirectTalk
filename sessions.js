@@ -80,6 +80,9 @@ function stripAnsi(text) {
 }
 
 function appendMessage(id, side, text) {
+  if (!fs.existsSync(sessionPath(id))) {
+    throw new Error('unknown session: ' + id);
+  }
   const clean = stripAnsi(text);
   const rec = { type: 'msg', side, text: clean, ts: new Date().toISOString() };
   fs.appendFileSync(sessionPath(id), JSON.stringify(rec) + '\n');
