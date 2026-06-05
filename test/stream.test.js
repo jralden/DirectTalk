@@ -1,0 +1,159 @@
+'use strict';
+
+const { test, after } = require('node:test');
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+
+const sessions = require('../sessions');
+
+const REPO_ROOT = path.join(__dirname, '..');
+const PORT = '5913';
+
+let createdId = null;
+const procs = [];
+
+function get(pathname) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port: Number(PORT), method: 'GET', path: pathname },
+      (res) => {
+        let buf = '';
+        res.on('data', (c) => (buf += c));
+        res.on('end', () => resolve({ status: res.statusCode, body: buf }));
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function post(pathname, body) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port: Number(PORT), method: 'POST', path: pathname,
+        headers: { 'Content-Type': 'application/json' } },
+      (res) => {
+        let buf = '';
+        res.on('data', (c) => (buf += c));
+        res.on('end', () => resolve({ status: res.statusCode, body: buf }));
+      }
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function start() {
+  const proc = spawn('node', ['server.js'], {
+    env: { ...process.env, PORT },
+    cwd: REPO_ROOT,
+    stdio: 'ignore',
+  });
+  procs.push(proc);
+  return proc;
+}
+
+async function waitReady(timeoutMs = 3000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const res = await get('/api/sessions');
+      if (res.status === 200) return true;
+    } catch (err) {
+      // not up yet
+    }
+    await sleep(100);
+  }
+  return false;
+}
+
+function stop(proc) {
+  return new Promise((resolve) => {
+    if (!proc || proc.exitCode !== null) return resolve();
+    proc.once('exit', () => resolve());
+    proc.kill('SIGTERM');
+  });
+}
+
+// Parse accumulated SSE buffer into an ordered list of message records,
+// ignoring heartbeat (':') frames and unparseable chunks.
+function parseFrames(buf) {
+  const out = [];
+  for (const chunk of buf.split('\n\n')) {
+    const line = chunk.trim();
+    if (!line || !line.startsWith('data:')) continue;
+    const json = line.slice('data:'.length).trim();
+    try {
+      out.push(JSON.parse(json));
+    } catch (e) {
+      // ignore
+    }
+  }
+  return out;
+}
+
+after(async () => {
+  for (const p of procs) await stop(p);
+  if (createdId) fs.rmSync(sessions.sessionPath(createdId), { force: true });
+});
+
+test('SSE replays transcript then pushes live messages', async () => {
+  const srv = start();
+  assert.ok(await waitReady(), 'server never became ready');
+
+  const created = await post('/api/sessions', JSON.stringify({ name: 'Stream Test ' + Date.now() }));
+  assert.equal(created.status, 201);
+  createdId = JSON.parse(created.body).id;
+  assert.ok(createdId);
+
+  // Stored transcript to be replayed on connect.
+  const firstPost = await post('/api/sessions/' + createdId + '/messages', JSON.stringify({ text: 'first' }));
+  assert.equal(firstPost.status, 201);
+
+  // Open the SSE stream and accumulate chunks.
+  let buf = '';
+  const streamReq = http.request(
+    { host: '127.0.0.1', port: Number(PORT), method: 'GET', path: '/api/sessions/' + createdId + '/stream' },
+    (res) => {
+      assert.equal(res.statusCode, 200);
+      assert.ok(res.headers['content-type'].includes('text/event-stream'));
+      res.on('data', (c) => (buf += c));
+    }
+  );
+  streamReq.end();
+
+  async function waitForText(text, timeoutMs = 3000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      if (parseFrames(buf).some((f) => f.text === text)) return true;
+      await sleep(50);
+    }
+    return false;
+  }
+
+  // 1. Replay observed.
+  assert.ok(await waitForText('first'), 'replay frame "first" not received');
+
+  // 2. Live push after subscribe.
+  const livePost = await post('/api/sessions/' + createdId + '/messages', JSON.stringify({ text: 'live' }));
+  assert.equal(livePost.status, 201);
+  assert.ok(await waitForText('live'), 'live frame "live" not received');
+
+  // 3. Ordering: replay precedes live.
+  const frames = parseFrames(buf);
+  const idxFirst = frames.findIndex((f) => f.text === 'first');
+  const idxLive = frames.findIndex((f) => f.text === 'live');
+  assert.ok(idxFirst >= 0 && idxLive >= 0);
+  assert.ok(idxFirst < idxLive, 'replay frame must precede live frame');
+
+  streamReq.destroy();
+  await stop(srv);
+});
