@@ -58,6 +58,7 @@
     }
     .status.connected { color: var(--ok); border-color: var(--ok); }
     .status.reconnecting { color: var(--bad); border-color: var(--bad); }
+    .status.disconnected { color: var(--bad); border-color: var(--bad); }
     main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
     /* Picker */
@@ -294,9 +295,13 @@
         es = new EventSource('/api/sessions/' + id + '/stream');
         es.onopen = function () { setStatus('connected'); };
         es.onerror = function () {
-          // EventSource auto-reconnects; reflect the drop. onopen fires again
-          // on a successful reconnect -> back to "connected".
-          setStatus('reconnecting');
+          // A terminal failure (e.g. 404 for a deleted/unknown session) leaves
+          // readyState === CLOSED -- EventSource has given up and will NOT
+          // reconnect, so surface "disconnected" instead of a misleading,
+          // forever-stuck "reconnecting". A transient drop keeps readyState at
+          // CONNECTING; onopen fires again on a successful reconnect.
+          if (es.readyState === EventSource.CLOSED) setStatus('disconnected');
+          else setStatus('reconnecting');
         };
         es.onmessage = function (e) {
           var rec;
