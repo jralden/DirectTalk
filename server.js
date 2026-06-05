@@ -130,10 +130,19 @@ async function handler(req, res) {
         if (typeof text !== 'string') {
           return sendJson(res, 400, { error: 'text is required' });
         }
-        if (!sessions.readSession(id)) {
-          return sendJson(res, 404, { error: 'not found' });
+        // No separate existence guard: appendMessage's own existsSync is the
+        // single source of truth. Translating its "unknown session" throw to
+        // a 404 avoids a redundant full-transcript read and the TOCTOU that
+        // would otherwise surface as a 500 if the file vanished mid-request.
+        let rec;
+        try {
+          rec = sessions.appendMessage(id, sideFor(req), text);
+        } catch (e) {
+          if (/unknown session/.test(e.message)) {
+            return sendJson(res, 404, { error: 'not found' });
+          }
+          throw e;
         }
-        const rec = sessions.appendMessage(id, sideFor(req), text);
         broadcast(id, rec);
         return sendJson(res, 201, rec);
       }
