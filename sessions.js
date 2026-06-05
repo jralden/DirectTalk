@@ -10,6 +10,9 @@ function ensureSessionsDir() {
 }
 
 function sessionPath(id) {
+  if (typeof id !== 'string' || !/^[a-z0-9-]+$/.test(id)) {
+    throw new Error('invalid session id');
+  }
   return path.join(SESSIONS_DIR, id + '.jsonl');
 }
 
