@@ -42,14 +42,14 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 ### Phase 3: Browser UI
 **Goal**: Users on any Mac can pick or create a session, read the live transcript, send messages, and see connection status — all in one browser page with zero install.
 **Depends on**: Phase 2
-**Requirements**: UI-01, UI-02, UI-03, UI-04
+**Requirements**: UI-01, UI-02, UI-03, UI-04 (plus rendering half of TXT-01)
 **Success Criteria** (what must be TRUE):
   1. The session picker lists existing sessions (name + created date) and offers a "new session" action that creates and enters a session.
   2. The transcript pane is scrollable, monospace with `white-space: pre-wrap`, renders text as text (never HTML), shows side + timestamp per line, and auto-scrolls on new messages.
   3. The entry box (textarea + Send, Cmd+Enter to send) clears on a successful send and keeps the text on a failed send.
   4. A connection-status indicator shows connected / reconnecting state and updates as the SSE connection drops and recovers.
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 1 plan
+- [ ] 03-01-PLAN.md — index.html single-file UI (picker, transcript pane, entry box, connection status) + GET / static route on server.js + static test
 
 ## Progress
 
@@ -57,7 +57,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 |-------|----------------|--------|-----------|
 | 1. Server & Session Persistence | 1/1 | Complete | 2026-06-05 |
 | 2. Live Messaging & Text Fidelity | 1/1 | Complete | 2026-06-05 |
-| 3. Browser UI | 0/0 | Not started | - |
+| 3. Browser UI | 0/1 | Not started | - |
 
 ---
-*Last updated: 2026-06-05 after phase 2 plan 01 execution*
+*Last updated: 2026-06-06 after phase 3 planning*
