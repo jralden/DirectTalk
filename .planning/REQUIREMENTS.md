@@ -46,4 +46,22 @@ All v1 requirements are hypotheses until shipped and validated.
 
 ## Traceability
 
-(Filled by roadmap — each REQ-ID mapped to a phase)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SRV-01 | Phase 1 | Pending |
+| SRV-02 | Phase 1 | Pending |
+| SESS-01 | Phase 1 | Pending |
+| SESS-02 | Phase 1 | Pending |
+| SESS-03 | Phase 1 | Pending |
+| CONN-01 | Phase 2 | Pending |
+| MSG-01 | Phase 2 | Pending |
+| MSG-02 | Phase 2 | Pending |
+| MSG-03 | Phase 2 | Pending |
+| MSG-04 | Phase 2 | Pending |
+| TXT-01 | Phase 2 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 3 | Pending |
+
+**Coverage:** 14/14 v1 requirements mapped, no orphans, no duplicates.
