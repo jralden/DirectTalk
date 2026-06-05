@@ -1,0 +1,22 @@
+{
+  "schema-version": "1.0.0",
+  "project-type": "code-development",
+  "scale": "local-use",
+  "sdm": "gsd",
+  "github-repo": "",
+  "project": {
+    "id": "8D0ECC95-7784-40CE-B35E-DF05D06BF17C",
+    "description": "An app to allow two macs on the same network to share a common message buffer",
+    "tags": []
+  },
+  "status": {
+    "activity": "active"
+  },
+  "vault-anchor": false,
+  "scaffolding": {
+    "git-init": true,
+    "copy-vscode-profile": false,
+    "seed-ai-context": true,
+    "include-test-framework": false
+  }
+}
