@@ -150,7 +150,11 @@ async function handler(req, res) {
           return sendJson(res, 400, { error: 'text is required' });
         }
         const text = body && body.text;
-        if (typeof text !== 'string') {
+        // Reject a truly empty string (length 0). Whitespace-only text is
+        // allowed on purpose -- the multi-line fidelity requirement means a
+        // message of only spaces/newlines may be legitimate -- so do NOT
+        // .trim() here.
+        if (typeof text !== 'string' || text.length === 0) {
           return sendJson(res, 400, { error: 'text is required' });
         }
         // No separate existence guard: appendMessage's own existsSync is the

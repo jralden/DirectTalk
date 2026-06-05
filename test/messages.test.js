@@ -76,6 +76,28 @@ test('POST without text -> 400', async () => {
   assert.equal(res.status, 400);
 });
 
+test('POST with empty text -> 400', async () => {
+  const res = await request(
+    'POST',
+    '/api/sessions/' + sessionId + '/messages',
+    JSON.stringify({ text: '' })
+  );
+  assert.equal(res.status, 400);
+});
+
+test('POST with whitespace-only text is accepted', async () => {
+  // Whitespace-only is legitimate (multi-line fidelity); only length 0 is
+  // rejected (WR-04).
+  const res = await request(
+    'POST',
+    '/api/sessions/' + sessionId + '/messages',
+    JSON.stringify({ text: '   \n  ' })
+  );
+  assert.equal(res.status, 201);
+  const obj = JSON.parse(res.body);
+  assert.equal(obj.text, '   \n  ');
+});
+
 test('ANSI stripped', async () => {
   const res = await request(
     'POST',
