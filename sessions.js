@@ -105,15 +105,30 @@ function countMessages(id) {
   return n;
 }
 
+// In-memory next-seq counter per session (WR-01). Seeded lazily from the
+// on-disk msg count on first append, then incremented in-process. Because the
+// read-and-increment below never yields to the event loop, two near-simultaneous
+// appends cannot read the same value -- each gets a distinct, monotonic seq.
+// The counter equals the positional seq readSession assigns on replay (both are
+// 0-based among msg records, in append order), so live and replay seqs stay
+// mutually consistent and the connect-boundary duplicate still dedupes. Seeded
+// from disk so it stays correct across process restarts.
+const nextSeq = new Map();
+
 function appendMessage(id, side, text) {
   if (!fs.existsSync(sessionPath(id))) {
     throw new Error('unknown session: ' + id);
   }
   const clean = stripAnsi(text);
-  // seq = position of this record among msg records (0-based). Derived from
-  // current on-disk count, so it equals the seq readSession assigns on
-  // replay. Stored in the JSONL line; Phase 1 readers tolerate extra fields.
-  const seq = countMessages(id);
+  // Atomically claim the next seq. The Map lookup + set is synchronous (no
+  // await/yield between read and increment), so concurrent appends within this
+  // single process each get a unique seq -- closing the countMessages read/write
+  // race that previously handed two simultaneous posts the same seq.
+  let seq = nextSeq.has(id) ? nextSeq.get(id) : countMessages(id);
+  nextSeq.set(id, seq + 1);
+  // seq = position of this record among msg records (0-based), matching the seq
+  // readSession assigns on replay. Stored in the JSONL line; Phase 1 readers
+  // tolerate extra fields.
   const rec = { type: 'msg', seq, side, text: clean, ts: new Date().toISOString() };
   fs.appendFileSync(sessionPath(id), JSON.stringify(rec) + '\n');
   return rec;

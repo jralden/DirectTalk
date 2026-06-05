@@ -117,3 +117,21 @@ test('data persists on disk: fresh readSession returns the data', () => {
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].text, 'persisted');
 });
+
+test('concurrent appends to the same session get distinct, monotonic seqs (WR-01)', () => {
+  const s = track(sessions.createSession('Concurrent Seq'));
+  // Two near-simultaneous appends. Under the old countMessages-then-write
+  // path both read the same count and got the same seq, which the client
+  // dedupe then dropped. The in-memory counter must hand out unique seqs.
+  const a = sessions.appendMessage(s.id, 'host', 'first');
+  const b = sessions.appendMessage(s.id, 'client', 'second');
+  assert.equal(typeof a.seq, 'number');
+  assert.equal(typeof b.seq, 'number');
+  assert.notEqual(a.seq, b.seq);
+  assert.equal(b.seq, a.seq + 1);
+
+  // Live seqs must agree with the positional seqs readSession assigns on
+  // replay, so the connect-boundary dedupe stays correct.
+  const res = sessions.readSession(s.id);
+  assert.deepEqual(res.messages.map((m) => m.seq), [a.seq, b.seq]);
+});
