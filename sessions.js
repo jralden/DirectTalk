@@ -28,16 +28,22 @@ function createSession(name) {
   ensureSessionsDir();
   const createdAt = new Date().toISOString();
   const base = slugify(name) + '-' + Date.now();
+  const metaLine = JSON.stringify({ type: 'meta', name, createdAt }) + '\n';
   let id = base;
   let n = 1;
-  while (fs.existsSync(sessionPath(id))) {
-    n += 1;
-    id = base + '-' + n;
+  // Exclusive create ('wx'/O_EXCL): atomically fails if the file already
+  // exists, closing the check-then-act race between processes. On EEXIST,
+  // bump the suffix and retry instead of clobbering/appending.
+  for (;;) {
+    try {
+      fs.writeFileSync(sessionPath(id), metaLine, { flag: 'wx' });
+      break;
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+      n += 1;
+      id = base + '-' + n;
+    }
   }
-  fs.appendFileSync(
-    sessionPath(id),
-    JSON.stringify({ type: 'meta', name, createdAt }) + '\n'
-  );
   return { id, name, createdAt };
 }
 
