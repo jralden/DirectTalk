@@ -10,20 +10,45 @@ sessions.ensureSessionsDir();
 // sessionId -> Set<res> of open SSE responses.
 const subscribers = new Map();
 
+// res -> its heartbeat interval handle, so a dead socket detected by a failed
+// write can clear the interval without waiting for the `close` event.
+const heartbeats = new Map();
+
 const HOST_ADDRS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
 function sideFor(req) {
   return HOST_ADDRS.has(req.socket.remoteAddress) ? 'host' : 'client';
 }
 
+// Remove a subscriber from the registry and clear its heartbeat. Idempotent:
+// safe to call from a write-failure path and again from `res.on('close')`.
+function dropSubscriber(id, res) {
+  const set = subscribers.get(id);
+  if (set) {
+    set.delete(res);
+    if (set.size === 0) subscribers.delete(id);
+  }
+  const hb = heartbeats.get(res);
+  if (hb) {
+    clearInterval(hb);
+    heartbeats.delete(res);
+  }
+}
+
 function broadcast(id, rec) {
   const set = subscribers.get(id);
   if (!set) return;
   const frame = 'data: ' + JSON.stringify(rec) + '\n\n';
-  for (const r of set) {
+  // Snapshot to an array: dropSubscriber mutates the Set on write failure,
+  // and mutating a Set while iterating it is unsafe.
+  for (const r of [...set]) {
     try {
       r.write(frame);
-    } catch (e) {}
+    } catch (e) {
+      // Write threw -> socket is dead. Prune it now instead of relying
+      // solely on the `close` event (WR-02/WR-03).
+      dropSubscriber(id, r);
+    }
   }
 }
 
@@ -104,17 +129,15 @@ async function handler(req, res) {
         const hb = setInterval(() => {
           try {
             res.write(':\n\n');
-          } catch (e) {}
+          } catch (e) {
+            // Heartbeat write threw -> socket is dead. Prune now and stop
+            // firing every 15s against a gone socket (WR-03).
+            dropSubscriber(id, res);
+          }
         }, 15000);
         if (hb.unref) hb.unref();
-        res.on('close', () => {
-          clearInterval(hb);
-          const s = subscribers.get(id);
-          if (s) {
-            s.delete(res);
-            if (s.size === 0) subscribers.delete(id);
-          }
-        });
+        heartbeats.set(res, hb);
+        res.on('close', () => dropSubscriber(id, res));
         return;
       }
 
@@ -156,6 +179,11 @@ async function handler(req, res) {
 }
 
 const server = http.createServer(handler);
+
+// Expose internal registries for tests (e.g. asserting dead-socket pruning).
+// Attached to the http.Server instance so the public export is unchanged.
+server._subscribers = subscribers;
+server._heartbeats = heartbeats;
 
 module.exports = server;
 
