@@ -38,6 +38,10 @@ function dropSubscriber(id, res) {
 function broadcast(id, rec) {
   const set = subscribers.get(id);
   if (!set) return;
+  // JSON.stringify escapes newlines -> exactly one `data:` line per record.
+  // This is load-bearing for SSE framing: do NOT emit raw multi-line text
+  // here (e.g. `data: ${rec.text}`) -- a `\n` in the payload would start a
+  // new field and a blank line mid-text would terminate the event early.
   const frame = 'data: ' + JSON.stringify(rec) + '\n\n';
   // Snapshot to an array: dropSubscriber mutates the Set on write failure,
   // and mutating a Set while iterating it is unsafe.
@@ -121,7 +125,9 @@ async function handler(req, res) {
         if (!subscribers.has(id)) subscribers.set(id, new Set());
         subscribers.get(id).add(res);
 
-        // Snapshot + replay AFTER registration.
+        // Snapshot + replay AFTER registration. As in broadcast(),
+        // JSON.stringify is load-bearing: it escapes newlines so each record
+        // is exactly one `data:` line. Do NOT emit raw multi-line text here.
         const data = sessions.readSession(id);
         for (const msg of data.messages) {
           res.write('data: ' + JSON.stringify(msg) + '\n\n');
