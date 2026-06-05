@@ -24,13 +24,13 @@ All v1 requirements are hypotheses until shipped and validated.
 - [x] **MSG-04**: ANSI escape codes are stripped from incoming text before storage and display
 
 ### Transcript (TXT)
-- [ ] **TXT-01**: The transcript preserves multi-line formatting and indentation (monospace, `white-space: pre-wrap`) and renders text as text, never HTML — _data layer done (byte-exact POST→store→SSE round-trip, Phase 2); `pre-wrap`/never-HTML rendering is Phase 3 UI_
+- [x] **TXT-01**: The transcript preserves multi-line formatting and indentation (monospace, `white-space: pre-wrap`) and renders text as text, never HTML — _data layer done (Phase 2); `pre-wrap`/textContent rendering shipped Phase 3 (index.html); two-Mac visual verification pending user_
 
 ### UI (UI)
-- [ ] **UI-01**: A session picker lists existing sessions (name + created date) and offers "new session"
-- [ ] **UI-02**: A scrollable transcript pane auto-scrolls on new messages; each line shows side + timestamp
-- [ ] **UI-03**: An entry box (textarea + Send, Cmd+Enter to send) clears on success and keeps text on a failed send
-- [ ] **UI-04**: A connection-status indicator shows connected / reconnecting state
+- [x] **UI-01**: A session picker lists existing sessions (name + created date) and offers "new session"
+- [x] **UI-02**: A scrollable transcript pane auto-scrolls on new messages; each line shows side + timestamp
+- [x] **UI-03**: An entry box (textarea + Send, Cmd+Enter to send) clears on success and keeps text on a failed send
+- [x] **UI-04**: A connection-status indicator shows connected / reconnecting state
 
 ## v2 Requirements (Deferred)
 
@@ -58,10 +58,10 @@ All v1 requirements are hypotheses until shipped and validated.
 | MSG-02 | Phase 2 | Complete |
 | MSG-03 | Phase 2 | Complete |
 | MSG-04 | Phase 2 | Complete |
-| TXT-01 | Phase 2 / Phase 3 | Data layer complete; rendering Phase 3 |
-| UI-01 | Phase 3 | Pending |
-| UI-02 | Phase 3 | Pending |
-| UI-03 | Phase 3 | Pending |
-| UI-04 | Phase 3 | Pending |
+| TXT-01 | Phase 2 / Phase 3 | Complete (two-Mac visual check pending user) |
+| UI-01 | Phase 3 | Complete (two-Mac visual check pending user) |
+| UI-02 | Phase 3 | Complete (two-Mac visual check pending user) |
+| UI-03 | Phase 3 | Complete (two-Mac visual check pending user) |
+| UI-04 | Phase 3 | Complete (two-Mac visual check pending user) |
 
 **Coverage:** 14/14 v1 requirements mapped, no orphans, no duplicates.

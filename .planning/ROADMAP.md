@@ -10,7 +10,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 
 - [x] **Phase 1: Server & Session Persistence** - Zero-dependency Node server with session create/list/resume backed by append-only JSONL
 - [x] **Phase 2: Live Messaging & Text Fidelity** - SSE relay with role detection, transcript replay, ANSI stripping, and LAN access
-- [ ] **Phase 3: Browser UI** - Single-page UI: session picker, transcript pane, entry box, connection-status indicator
+- [x] **Phase 3: Browser UI** - Single-page UI: session picker, transcript pane, entry box, connection-status indicator (two-Mac manual verify pending user)
 
 ## Phase Details
 
@@ -49,7 +49,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
   3. The entry box (textarea + Send, Cmd+Enter to send) clears on a successful send and keeps the text on a failed send.
   4. A connection-status indicator shows connected / reconnecting state and updates as the SSE connection drops and recovers.
 **Plans**: 1 plan
-- [ ] 03-01-PLAN.md — index.html single-file UI (picker, transcript pane, entry box, connection status) + GET / static route on server.js + static test
+- [x] 03-01-PLAN.md — index.html single-file UI (picker, transcript pane, entry box, connection status) + GET / static route on server.js + static test
 
 ## Progress
 
@@ -57,7 +57,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 |-------|----------------|--------|-----------|
 | 1. Server & Session Persistence | 1/1 | Complete | 2026-06-05 |
 | 2. Live Messaging & Text Fidelity | 1/1 | Complete | 2026-06-05 |
-| 3. Browser UI | 0/1 | Not started | - |
+| 3. Browser UI | 1/1 | Complete (two-Mac verify pending user) | 2026-06-06 |
 
 ---
-*Last updated: 2026-06-06 after phase 3 planning*
+*Last updated: 2026-06-06 after phase 3 plan 01 execution*
