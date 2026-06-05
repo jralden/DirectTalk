@@ -6,16 +6,16 @@ All v1 requirements are hypotheses until shipped and validated.
 ## v1 Requirements
 
 ### Server (SRV)
-- [ ] **SRV-01**: Host Mac runs a zero-dependency Node server that serves the UI and relays messages
-- [ ] **SRV-02**: Server listens on a configurable port (default 5757) and creates the `sessions/` directory on first run
+- [x] **SRV-01**: Host Mac runs a zero-dependency Node server that serves the UI and relays messages
+- [x] **SRV-02**: Server listens on a configurable port (default 5757) and creates the `sessions/` directory on first run
 
 ### Connectivity (CONN)
 - [ ] **CONN-01**: Host accesses the app via `localhost`; client Macs access it via `<host>.local` on the LAN (no IP entry needed)
 
 ### Sessions (SESS)
-- [ ] **SESS-01**: User can create a new session by name
-- [ ] **SESS-02**: User can resume an existing session chosen from a list
-- [ ] **SESS-03**: Sessions persist as append-only JSONL and survive a server restart
+- [x] **SESS-01**: User can create a new session by name
+- [x] **SESS-02**: User can resume an existing session chosen from a list
+- [x] **SESS-03**: Sessions persist as append-only JSONL and survive a server restart
 
 ### Messaging (MSG)
 - [ ] **MSG-01**: A message posted from any browser appears live in every connected browser via SSE push
@@ -48,11 +48,11 @@ All v1 requirements are hypotheses until shipped and validated.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRV-01 | Phase 1 | Pending |
-| SRV-02 | Phase 1 | Pending |
-| SESS-01 | Phase 1 | Pending |
-| SESS-02 | Phase 1 | Pending |
-| SESS-03 | Phase 1 | Pending |
+| SRV-01 | Phase 1 | Complete |
+| SRV-02 | Phase 1 | Complete |
+| SESS-01 | Phase 1 | Complete |
+| SESS-02 | Phase 1 | Complete (API) |
+| SESS-03 | Phase 1 | Complete |
 | CONN-01 | Phase 2 | Pending |
 | MSG-01 | Phase 2 | Pending |
 | MSG-02 | Phase 2 | Pending |

@@ -8,7 +8,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 
 ## Phases
 
-- [ ] **Phase 1: Server & Session Persistence** - Zero-dependency Node server with session create/list/resume backed by append-only JSONL
+- [x] **Phase 1: Server & Session Persistence** - Zero-dependency Node server with session create/list/resume backed by append-only JSONL
 - [ ] **Phase 2: Live Messaging & Text Fidelity** - SSE relay with role detection, transcript replay, ANSI stripping, and LAN access
 - [ ] **Phase 3: Browser UI** - Single-page UI: session picker, transcript pane, entry box, connection-status indicator
 
@@ -24,7 +24,7 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
   3. A GET to `/api/sessions` returns the list of existing sessions (id, name, createdAt) by scanning `sessions/`.
   4. After stopping and restarting the server, previously created sessions and their stored messages are still present and readable.
 **Plans**: 1 plan
-- [ ] 01-01-PLAN.md — sessions.js persistence module + node:http server (create/list sessions, JSONL persistence, restart survival)
+- [x] 01-01-PLAN.md — sessions.js persistence module + node:http server (create/list sessions, JSONL persistence, restart survival)
 
 ### Phase 2: Live Messaging & Text Fidelity
 **Goal**: Text posted from any browser appears live in every connected browser, intact and correctly attributed, with terminal output rendered cleanly.
@@ -54,9 +54,9 @@ Derived from `.planning/REQUIREMENTS.md` and `docs/specs/2026-06-05-directtalk-d
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Server & Session Persistence | 0/1 | Planned | - |
+| 1. Server & Session Persistence | 1/1 | Complete | 2026-06-05 |
 | 2. Live Messaging & Text Fidelity | 0/0 | Not started | - |
 | 3. Browser UI | 0/0 | Not started | - |
 
 ---
-*Last updated: 2026-06-05 at phase 1 planning*
+*Last updated: 2026-06-05 after phase 1 plan 01 execution*
