@@ -338,6 +338,7 @@
       }
 
       function sendMessage() {
+        if (!currentId) return; // no active session -> never POST to /null/
         var text = entry.value;
         if (text.length === 0) return; // nothing to send
         hide(sendErr);
