@@ -3,7 +3,7 @@
   "project-type": "code-development",
   "scale": "local-use",
   "sdm": "gsd",
-  "github-repo": "",
+  "github-repo": "https://github.com/jralden/DirectTalk",
   "project": {
     "id": "8D0ECC95-7784-40CE-B35E-DF05D06BF17C",
     "description": "An app to allow two macs on the same network to share a common message buffer",
