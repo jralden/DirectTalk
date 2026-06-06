@@ -32,6 +32,10 @@ node server.js           # serves http://localhost:5757
 PORT=8080 node server.js # custom port
 ```
 
+You don't have to be in the project directory — paths resolve relative to the script, so a
+full path works from anywhere: `node /path/to/DirectTalk/server.js`. The `sessions/` data
+directory and `index.html` are always read from next to `server.js`.
+
 Then:
 
 1. **Host Mac** → open `http://localhost:5757`.
