@@ -1,2 +1,21 @@
+# Runtime session transcripts (created on first run)
 sessions/
+
+# Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Env / secrets
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Editor / misc
+*.swp
+.idea/
+.vscode/
