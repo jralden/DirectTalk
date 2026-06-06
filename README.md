@@ -28,13 +28,22 @@ connected Mac — live.
 On the host Mac:
 
 ```bash
-node server.js           # serves http://localhost:5757
-PORT=8080 node server.js # custom port
+cd ~/Documents/Development/DirectTalk
+node server.js           # serves http://localhost:5757 (default port)
+PORT=8080 node server.js # serves on port 8080 instead
 ```
 
-You don't have to be in the project directory — paths resolve relative to the script, so a
-full path works from anywhere: `node /path/to/DirectTalk/server.js`. The `sessions/` data
-directory and `index.html` are always read from next to `server.js`.
+**Custom port.** By default the server listens on port **5757**. To use a different port,
+set the `PORT` environment variable for the command: `PORT=8080 node server.js` runs it on
+8080. The `PORT=8080` prefix applies to that one run only (it isn't permanent), and `8080`
+is just an example — any free port works. Whatever port you choose, clients open the
+matching URL (e.g. `http://<host-name>.local:8080`). Change the port if 5757 is already in
+use or you prefer a different one.
+
+The `cd` above just lets you type `node server.js` plainly. It isn't strictly required —
+paths resolve relative to the script, so `node /path/to/DirectTalk/server.js` works from
+any directory. The `sessions/` data directory and `index.html` are always read from next to
+`server.js`.
 
 Then:
 
