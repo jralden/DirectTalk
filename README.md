@@ -28,7 +28,7 @@ connected Mac — live.
 On the host Mac:
 
 ```bash
-cd ~/Documents/Development/DirectTalk
+cd ~/Development/DirectTalk
 node server.js           # serves http://localhost:5757 (default port)
 PORT=8080 node server.js # serves on port 8080 instead
 ```

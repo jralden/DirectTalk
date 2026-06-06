@@ -172,7 +172,7 @@ standard library. Do NOT run `npm install`. Do NOT add any dependency.
       `fs.rmSync(sessions.sessionPath(id), { force: true })` for each.
   </action>
   <verify>
-    <automated>cd /Users/johnalden/Documents/Development/DirectTalk && node --test test/sessions.test.js</automated>
+    <automated>cd /Users/johnalden/Development/DirectTalk && node --test test/sessions.test.js</automated>
   </verify>
   <acceptance_criteria>
     - `node --test test/sessions.test.js` exits 0, all tests pass.
@@ -240,7 +240,7 @@ standard library. Do NOT run `npm install`. Do NOT add any dependency.
     - `after()`: close server and `fs.rmSync` the created session file(s) (hermetic).
   </action>
   <verify>
-    <automated>cd /Users/johnalden/Documents/Development/DirectTalk && node --test test/server.test.js</automated>
+    <automated>cd /Users/johnalden/Development/DirectTalk && node --test test/server.test.js</automated>
   </verify>
   <acceptance_criteria>
     - `node --test test/server.test.js` exits 0, all tests pass.
@@ -290,7 +290,7 @@ standard library. Do NOT run `npm install`. Do NOT add any dependency.
     server never becomes ready.
   </action>
   <verify>
-    <automated>cd /Users/johnalden/Documents/Development/DirectTalk && node --test test/restart.test.js</automated>
+    <automated>cd /Users/johnalden/Development/DirectTalk && node --test test/restart.test.js</automated>
   </verify>
   <acceptance_criteria>
     - `node --test test/restart.test.js` exits 0, the restart test passes.
