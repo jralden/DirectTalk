@@ -334,7 +334,7 @@ Expected: PASS (all delete/whoami tests green).
 
 - [ ] **Step 6: Run the full suite (no regressions)**
 
-Run: `node --test test/`
+Run: `node --test test/*.test.js`  (use the glob form; bare `node --test test/` is broken in this Node 22 setup and reports a false failure)
 Expected: PASS — all files green.
 
 - [ ] **Step 7: Commit**
@@ -812,7 +812,7 @@ Write `index.html`:
 
 - [ ] **Step 2: Verify the test suite still passes (no server regressions)**
 
-Run: `node --test test/`
+Run: `node --test test/*.test.js`  (glob form; bare `node --test test/` is broken in this Node 22 setup)
 Expected: PASS — `index.html` changes don't touch server tests; `static.test.js`
 still serves the file.
 
