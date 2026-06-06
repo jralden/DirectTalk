@@ -52,13 +52,32 @@ Then:
    Find `<host-name>` with `scutil --get LocalHostName` on the host, then append `.local`
    (e.g. `http://johns-macbook.local:5757`). macOS Bonjour resolves it automatically — no
    IP addresses to type.
-3. Pick an existing session or create a new one. Everyone in the same session shares one
-   transcript.
+3. Pick a session from the list at the top of the page (on the host Mac you can create one
+   with **+ New**). Everyone in the same session shares one transcript.
 4. Paste/type into the entry box, **Cmd+Enter** (or click Send). The line appears on every
    connected Mac, labeled **Host** or **Client**.
 
 The host Mac is the hub: when its server is off, sessions aren't live. Transcripts are
 saved to disk, so a session survives a server restart.
+
+## Roles: host vs. client
+
+Everyone opens the same page, but what you can do depends on how you connected:
+
+- **Host** — the browser on the Mac running the server (opened via `localhost`/loopback).
+  Sees an always-visible session list with controls to **create** (`+ New`) and **delete**
+  (`✕`) sessions.
+- **Client** — any browser reaching the server over the LAN. Sees the same session list and
+  can **select** any session to read and write its transcript, but cannot add or delete.
+
+The role is decided server-side by connection origin (loopback = host) and shown as a badge
+in the header. The session list refreshes on its own, so a session the host adds or removes
+appears or disappears on every connected Mac within a few seconds. Deletion is enforced on
+the **server**, not just hidden in the client UI — a client cannot delete a session even by
+calling the API directly.
+
+Note: "host" means *connected via `localhost`*. If you open the app on the host Mac using
+its LAN IP or `.local` name instead of `localhost`, that browser is treated as a client.
 
 ## Features
 
@@ -70,6 +89,9 @@ saved to disk, so a session survives a server restart.
   rendered as text, never HTML.
 - **Auto attribution** — messages from the host show as `Host`, everyone else `Client`
   (by connection origin; no role picker).
+- **Host/client roles** — the host (the Mac running the server) manages sessions
+  (create/delete) from an always-on, auto-refreshing session list; clients select and chat
+  but can't manage. Enforced server-side. See [Roles](#roles-host-vs-client).
 - **Connection status** — a live indicator shows connected / reconnecting / disconnected.
 - **Zero install on clients, zero npm dependencies, one server file + one HTML file.**
 
@@ -90,7 +112,8 @@ Host Mac                          Client Mac(s)
 - `index.html` — single self-contained page (HTML + inline CSS + JS, no client deps).
 
 API: `GET /api/sessions`, `POST /api/sessions`, `GET /api/sessions/:id/stream` (SSE),
-`POST /api/sessions/:id/messages`.
+`POST /api/sessions/:id/messages`, `DELETE /api/sessions/:id` (host-only),
+`GET /api/whoami` (reports the caller's role).
 
 ## Security
 
@@ -98,13 +121,18 @@ LAN-only and **unauthenticated by design** — anyone on your wifi who knows the
 and post to a session, and session files are stored unencrypted under `sessions/`.
 Intended for a trusted home network. Don't expose it to the public internet.
 
+The host/client split is **not** authentication: it gates session *management* (only the
+loopback browser can create/delete) but reading and posting stay open to everyone on the
+LAN. It distinguishes the operator's machine from family devices — it is not a security
+boundary against an untrusted network.
+
 ## Tests
 
 ```bash
 node --test
 ```
 
-29 tests, zero dependencies.
+40 tests, zero dependencies.
 
 ## License
 
