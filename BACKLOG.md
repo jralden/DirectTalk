@@ -5,11 +5,10 @@ Newest ideas go at the bottom; nothing here is committed work yet.
 
 ## Open
 
-1. **Delete a session.** There's no way to remove a session from the app today — old
-   sessions accumulate in the picker and must be deleted by hand (`rm sessions/<id>.jsonl`
-   on the host). Add a delete action (e.g. a button in the picker) plus a
-   `DELETE /api/sessions/:id` endpoint, with a confirm step so it isn't one misclick.
+(none)
 
 ## Done
 
-(none yet)
+1. **Delete a session.** Added a host-only `✕` per row in the session table plus
+   a host-enforced `DELETE /api/sessions/:id` endpoint, with a browser `confirm`
+   step. (2026-06-06)
