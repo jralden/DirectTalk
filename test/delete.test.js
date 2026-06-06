@@ -110,20 +110,30 @@ test('DELETE /api/sessions/:id from a client is forbidden (403), file untouched'
 
 test('DELETE ends open SSE subscribers for the session', async () => {
   const s = track(sessions.createSession('Sub End'));
-  // Open a stream and wait for it to be registered.
-  await new Promise((resolve, reject) => {
-    const req = http.request(
-      { host: '127.0.0.1', port, method: 'GET', path: '/api/sessions/' + s.id + '/stream' },
-      () => resolve()
-    );
-    req.on('error', reject);
-    req.end();
+  // Open a real SSE stream so there is a live subscriber to end.
+  const streamReq = http.request(
+    { host: '127.0.0.1', port, method: 'GET', path: '/api/sessions/' + s.id + '/stream' }
+  );
+  streamReq.end();
+  const streamRes = await new Promise((resolve, reject) => {
+    streamReq.on('response', resolve);
+    streamReq.on('error', reject);
   });
-  await new Promise((r) => setTimeout(r, 50)); // let registration settle
+  streamRes.resume(); // drain SSE bytes so the socket doesn't buffer/back-pressure
+
+  // Poll for registration instead of a fixed sleep (faster, not flaky).
+  const deadline = Date.now() + 2000;
+  while (!server._subscribers.has(s.id) && Date.now() < deadline) {
+    await new Promise((r) => setImmediate(r));
+  }
   assert.ok(server._subscribers.has(s.id), 'precondition: subscriber registered');
+
   const res = await request('DELETE', '/api/sessions/' + s.id);
   assert.equal(res.status, 200);
   assert.ok(!server._subscribers.has(s.id), 'subscribers cleared on delete');
+
+  // Close the client socket so the test doesn't linger on the 15s heartbeat.
+  streamReq.destroy();
 });
 
 test('stop server', async () => {

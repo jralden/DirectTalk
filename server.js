@@ -120,6 +120,11 @@ async function handler(req, res) {
           'Cache-Control': 'no-cache',
           Connection: 'keep-alive',
         });
+        // Flush headers immediately with an SSE comment. Node holds response
+        // headers until the first body write; for an empty session there is no
+        // replay to write, so without this the client's EventSource would not
+        // fire `onopen` (stuck "connecting") until the first 15s heartbeat.
+        res.write(':\n\n');
 
         // Register the subscriber BEFORE snapshotting/replaying. A POST that
         // lands in this window is then delivered as a LIVE frame instead of
