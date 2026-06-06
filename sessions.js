@@ -137,7 +137,7 @@ function appendMessage(id, side, text) {
 function deleteSession(id) {
   const p = sessionPath(id); // validates id; throws 'invalid session id'
   if (!fs.existsSync(p)) return false;
-  fs.rmSync(p);
+  fs.rmSync(p, { force: true });
   nextSeq.delete(id);
   return true;
 }
