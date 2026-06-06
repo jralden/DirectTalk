@@ -19,3 +19,6 @@ yarn-error.log*
 *.swp
 .idea/
 .vscode/
+
+# Visual brainstorming companion (local, ephemeral)
+.superpowers/
