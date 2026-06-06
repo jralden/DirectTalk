@@ -81,6 +81,51 @@ test('GET /api/whoami returns host for a loopback request', async () => {
   assert.equal(JSON.parse(res.body).side, 'host');
 });
 
+test('DELETE /api/sessions/:id as host deletes the file (200)', async () => {
+  const s = track(sessions.createSession('Host Delete'));
+  const res = await request('DELETE', '/api/sessions/' + s.id);
+  assert.equal(res.status, 200);
+  assert.equal(JSON.parse(res.body).ok, true);
+  assert.ok(!fs.existsSync(sessions.sessionPath(s.id)));
+});
+
+test('DELETE /api/sessions/:id for a missing session returns 404', async () => {
+  const res = await request('DELETE', '/api/sessions/no-such-' + Date.now());
+  assert.equal(res.status, 404);
+});
+
+test('DELETE /api/sessions/:id from a client is forbidden (403), file untouched', async () => {
+  const s = track(sessions.createSession('Client Blocked'));
+  // Simulate a non-loopback caller: temporarily stop treating loopback as host.
+  const saved = [...server._hostAddrs];
+  server._hostAddrs.clear();
+  try {
+    const res = await request('DELETE', '/api/sessions/' + s.id);
+    assert.equal(res.status, 403);
+  } finally {
+    for (const a of saved) server._hostAddrs.add(a);
+  }
+  assert.ok(fs.existsSync(sessions.sessionPath(s.id)), 'file must survive a forbidden delete');
+});
+
+test('DELETE ends open SSE subscribers for the session', async () => {
+  const s = track(sessions.createSession('Sub End'));
+  // Open a stream and wait for it to be registered.
+  await new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port, method: 'GET', path: '/api/sessions/' + s.id + '/stream' },
+      () => resolve()
+    );
+    req.on('error', reject);
+    req.end();
+  });
+  await new Promise((r) => setTimeout(r, 50)); // let registration settle
+  assert.ok(server._subscribers.has(s.id), 'precondition: subscriber registered');
+  const res = await request('DELETE', '/api/sessions/' + s.id);
+  assert.equal(res.status, 200);
+  assert.ok(!server._subscribers.has(s.id), 'subscribers cleared on delete');
+});
+
 test('stop server', async () => {
   await new Promise((resolve) => server.close(resolve));
 });

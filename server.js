@@ -187,6 +187,27 @@ async function handler(req, res) {
       }
     }
 
+    // Host-only session deletion. Authorization is enforced here, not just in
+    // the client UI: a client could otherwise issue this request directly.
+    const del = pathname.match(/^\/api\/sessions\/([a-z0-9-]+)$/);
+    if (req.method === 'DELETE' && del) {
+      const id = del[1];
+      if (sideFor(req) !== 'host') {
+        return sendJson(res, 403, { error: 'forbidden' });
+      }
+      // End any open streams so watchers don't sit on a dead session.
+      const set = subscribers.get(id);
+      if (set) {
+        for (const r of [...set]) {
+          dropSubscriber(id, r);
+          try { r.end(); } catch (e) { /* already closed */ }
+        }
+      }
+      const existed = sessions.deleteSession(id);
+      if (!existed) return sendJson(res, 404, { error: 'not found' });
+      return sendJson(res, 200, { ok: true });
+    }
+
     // Static landing page. Placed AFTER all /api branches so it never shadows
     // an API route, and BEFORE the trailing 404. LAN tool, tiny file: read it
     // per request (no caching needed).
@@ -209,6 +230,9 @@ const server = http.createServer(handler);
 // Attached to the http.Server instance so the public export is unchanged.
 server._subscribers = subscribers;
 server._heartbeats = heartbeats;
+// Exposed for tests: mutate to simulate a non-loopback (client) caller, since
+// the test harness can only connect over loopback.
+server._hostAddrs = HOST_ADDRS;
 
 module.exports = server;
 
