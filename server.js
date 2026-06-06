@@ -85,6 +85,10 @@ async function handler(req, res) {
       return sendJson(res, 200, sessions.listSessions());
     }
 
+    if (req.method === 'GET' && pathname === '/api/whoami') {
+      return sendJson(res, 200, { side: sideFor(req) });
+    }
+
     if (req.method === 'POST' && pathname === '/api/sessions') {
       const raw = await readBody(req);
       let body;

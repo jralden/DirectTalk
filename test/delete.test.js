@@ -3,8 +3,10 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const http = require('node:http');
 
 const sessions = require('../sessions');
+const server = require('../server');
 
 const createdIds = [];
 function track(s) {
@@ -47,4 +49,38 @@ test('deleteSession clears the in-memory seq counter', () => {
   );
   const rec = sessions.appendMessage(s.id, 'host', 'fresh');
   assert.equal(rec.seq, 0);
+});
+
+let port;
+
+test('start server', async () => {
+  await new Promise((resolve) => server.listen(0, resolve));
+  port = server.address().port;
+});
+
+function request(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port, method, path,
+        headers: { 'Content-Type': 'application/json' } },
+      (res) => {
+        let buf = '';
+        res.on('data', (c) => (buf += c));
+        res.on('end', () => resolve({ status: res.statusCode, body: buf }));
+      }
+    );
+    req.on('error', reject);
+    if (body !== undefined) req.write(body);
+    req.end();
+  });
+}
+
+test('GET /api/whoami returns host for a loopback request', async () => {
+  const res = await request('GET', '/api/whoami');
+  assert.equal(res.status, 200);
+  assert.equal(JSON.parse(res.body).side, 'host');
+});
+
+test('stop server', async () => {
+  await new Promise((resolve) => server.close(resolve));
 });
