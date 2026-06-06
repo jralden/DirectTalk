@@ -134,6 +134,14 @@ function appendMessage(id, side, text) {
   return rec;
 }
 
+function deleteSession(id) {
+  const p = sessionPath(id); // validates id; throws 'invalid session id'
+  if (!fs.existsSync(p)) return false;
+  fs.rmSync(p);
+  nextSeq.delete(id);
+  return true;
+}
+
 function readSession(id) {
   if (!fs.existsSync(sessionPath(id))) return null;
   const content = fs.readFileSync(sessionPath(id), 'utf8');
@@ -169,4 +177,5 @@ module.exports = {
   listSessions,
   appendMessage,
   readSession,
+  deleteSession,
 };
