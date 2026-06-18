@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const sessions = require('./sessions');
 
-const PORT = Number(process.env.PORT) || 5757;
+const { PORT: BAKED_PORT } = require('./src/port.generated');
+const PORT = Number(process.env.PORT) || BAKED_PORT;
 
 sessions.ensureSessionsDir();
 

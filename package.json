@@ -1,0 +1,13 @@
+{
+  "name": "directtalk",
+  "version": "1.0.0",
+  "description": "An app to allow two macs on the same network to share a common message buffer",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "sync-port": "node scripts/sync-port.mjs",
+    "prepare": "node scripts/sync-port.mjs",
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}
