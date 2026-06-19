@@ -42,6 +42,11 @@ cp "$ROOT/index.html"  "$APP/Contents/Resources/app/"
 cp "$ROOT/package.json" "$APP/Contents/Resources/app/"
 cp -R "$ROOT/src"      "$APP/Contents/Resources/app/"
 
+# App icon (optional — built once and committed under assets/).
+if [ -f "$ROOT/assets/icon.icns" ]; then
+  cp "$ROOT/assets/icon.icns" "$APP/Contents/Resources/icon.icns"
+fi
+
 # Launcher: the bundle's main executable. Starts the server with the bundled
 # node, waits for it to accept connections, opens the browser, then blocks on
 # the server so the app stays "running" until quit (which kills the server).
@@ -85,6 +90,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleShortVersionString</key> <string>1.0.0</string>
   <key>CFBundlePackageType</key>     <string>APPL</string>
   <key>CFBundleExecutable</key>      <string>DirectTalk</string>
+  <key>CFBundleIconFile</key>        <string>icon</string>
   <key>LSMinimumSystemVersion</key>  <string>11.0</string>
   <key>NSHighResolutionCapable</key> <true/>
 </dict>
