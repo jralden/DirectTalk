@@ -60,6 +60,28 @@ Then:
 The host Mac is the hub: when its server is off, sessions aren't live. Transcripts are
 saved to disk, so a session survives a server restart.
 
+## Install as a macOS app
+
+To run DirectTalk by double-clicking instead of typing `node server.js`, build a
+self-contained `.app`:
+
+```bash
+bash scripts/build-app.sh      # produces dist/DirectTalk.app
+```
+
+The bundle embeds a portable Node.js runtime (no system Node needed), starts the server,
+and opens the UI in your default browser. Drag `dist/DirectTalk.app` into `/Applications`.
+Quitting the app stops the server.
+
+Notes:
+
+- The script targets Apple Silicon (`darwin-arm64`); for an Intel Mac, change `NODE_ARCH`
+  in `scripts/build-app.sh` to `darwin-x64`.
+- The app is ad-hoc signed. Copying it to a *different* Mac triggers Gatekeeper the first
+  time — right-click the app and choose **Open** to approve it.
+- Session transcripts are written inside the app bundle, so install it where your user can
+  write (the host Mac running it is the owner — `/Applications` is fine for an admin user).
+
 ## Roles: host vs. client
 
 Everyone opens the same page, but what you can do depends on how you connected:

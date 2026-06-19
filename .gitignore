@@ -1,6 +1,9 @@
 # Runtime session transcripts (created on first run)
 sessions/
 
+# Built macOS app bundle
+dist/
+
 # Node
 node_modules/
 npm-debug.log*
