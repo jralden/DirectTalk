@@ -58,6 +58,20 @@
     .status.reconnecting { color: var(--bad); border-color: var(--bad); }
     .status.disconnected { color: var(--bad); border-color: var(--bad); }
 
+    /* Client connect URL (host-only). */
+    .connect { display: flex; align-items: center; gap: 6px; }
+    .connect .connect-label { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    .connect code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px; color: var(--accent);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 6px;
+    }
+    .copybtn { padding: 3px 7px; font-size: 13px; line-height: 1; background: #0e639c; }
+    .copybtn.copied { background: var(--ok); color: #1e1e1e; }
+    .quitbtn { background: #6e2f2f; }
+    .quitbtn:hover { background: var(--bad); color: #1e1e1e; }
+
     main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
     /* Sessions table (always visible) */
@@ -118,7 +132,13 @@
     <span id="roleBadge" class="role-badge hidden"></span>
     <span id="sessionName" class="sdate"></span>
     <span class="spacer"></span>
+    <span id="connectBox" class="connect host-only hidden">
+      <span class="connect-label">Client URL</span>
+      <code id="connectUrl"></code>
+      <button id="copyUrlBtn" class="copybtn" title="Copy to clipboard">&#x2398;</button>
+    </span>
     <span id="status" class="status hidden">connecting</span>
+    <button id="quitBtn" class="quitbtn host-only hidden" title="Quit DirectTalk">Quit</button>
   </header>
 
   <main>
@@ -157,6 +177,10 @@
       var newBtn = document.getElementById('newBtn');
       var sessionNameEl = document.getElementById('sessionName');
       var roleBadge = document.getElementById('roleBadge');
+      var connectBox = document.getElementById('connectBox');
+      var connectUrlEl = document.getElementById('connectUrl');
+      var copyUrlBtn = document.getElementById('copyUrlBtn');
+      var quitBtn = document.getElementById('quitBtn');
 
       var es = null;          // active EventSource
       var currentId = null;   // active session id
@@ -184,7 +208,59 @@
             document.body.dataset.role = role;
             roleBadge.textContent = role;
             show(roleBadge);
+            // Connect URL is host-only (CSS gating hides it for clients), but
+            // only populate/reveal it once whoami actually returns one.
+            if (role === 'host' && o.connectUrl) {
+              connectUrlEl.textContent = o.connectUrl;
+              show(connectBox);
+            }
+            if (role === 'host') show(quitBtn);
           });
+      }
+
+      // ----- Quit (host-only) -----
+      function quitApp() {
+        if (!window.confirm('Quit DirectTalk? This stops the server for everyone.')) return;
+        fetch('/api/quit', { method: 'POST' })
+          .catch(function () { /* server may die before responding -- expected */ })
+          .then(function () {
+            if (es) { try { es.close(); } catch (e) { /* no-op */ } }
+            setStatus('disconnected');
+            document.title = 'DirectTalk (stopped)';
+            transcript.textContent = 'DirectTalk has been stopped. You can close this tab.';
+          });
+      }
+
+      // ----- Copy connect URL -----
+      function copyConnectUrl() {
+        var url = connectUrlEl.textContent;
+        if (!url) return;
+        function flash() {
+          copyUrlBtn.classList.add('copied');
+          copyUrlBtn.textContent = '✓';
+          setTimeout(function () {
+            copyUrlBtn.classList.remove('copied');
+            copyUrlBtn.textContent = '⎘';
+          }, 1200);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(flash, function () { fallbackCopy(url, flash); });
+        } else {
+          fallbackCopy(url, flash);
+        }
+      }
+
+      // Clipboard API needs a secure context; over plain http on the LAN it may
+      // be unavailable, so fall back to a hidden textarea + execCommand.
+      function fallbackCopy(text, onOk) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { if (document.execCommand('copy')) onOk(); } catch (e) { /* no-op */ }
+        document.body.removeChild(ta);
       }
 
       // ----- Sessions table -----
@@ -429,6 +505,8 @@
       // ----- Wiring -----
       newBtn.addEventListener('click', createSession);
       sendBtn.addEventListener('click', sendMessage);
+      copyUrlBtn.addEventListener('click', copyConnectUrl);
+      quitBtn.addEventListener('click', quitApp);
       entry.addEventListener('keydown', function (e) {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
           e.preventDefault();

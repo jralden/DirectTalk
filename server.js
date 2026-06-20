@@ -2,11 +2,33 @@
 
 const http = require('node:http');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const sessions = require('./sessions');
 
 const { PORT: BAKED_PORT } = require('./src/port.generated');
 const PORT = Number(process.env.PORT) || BAKED_PORT;
+
+// The Bonjour (.local) host name a client on the same LAN uses to reach this
+// host. Resolved once at startup -- it is stable for the process lifetime, so
+// there's no need to spawn `scutil` per request. `scutil --get LocalHostName`
+// is the authoritative mDNS name; fall back to os.hostname() if it's
+// unavailable (e.g. non-macOS), ensuring a `.local` suffix either way.
+function bonjourHost() {
+  try {
+    const name = execFileSync('scutil', ['--get', 'LocalHostName'], {
+      encoding: 'utf8',
+    }).trim();
+    if (name) return name + '.local';
+  } catch (e) {
+    /* scutil missing or errored -- fall through to os.hostname() */
+  }
+  const h = os.hostname().replace(/\.$/, '');
+  return /\.local$/i.test(h) ? h : h + '.local';
+}
+
+const CONNECT_URL = `http://${bonjourHost()}:${PORT}/`;
 
 sessions.ensureSessionsDir();
 
@@ -87,7 +109,20 @@ async function handler(req, res) {
     }
 
     if (req.method === 'GET' && pathname === '/api/whoami') {
-      return sendJson(res, 200, { side: sideFor(req) });
+      return sendJson(res, 200, { side: sideFor(req), connectUrl: CONNECT_URL });
+    }
+
+    // Host-only quit. Stops the server process, which makes the .app launcher's
+    // `wait $SRV` return and its EXIT trap fire -- ending the app. Authorization
+    // is enforced here (not just in UI): a client must not be able to kill the
+    // host. Respond first, then exit on the next tick so the 200 flushes.
+    if (req.method === 'POST' && pathname === '/api/quit') {
+      if (sideFor(req) !== 'host') {
+        return sendJson(res, 403, { error: 'forbidden' });
+      }
+      sendJson(res, 200, { ok: true });
+      setTimeout(() => process.exit(0), 50);
+      return;
     }
 
     if (req.method === 'POST' && pathname === '/api/sessions') {
