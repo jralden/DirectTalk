@@ -18,5 +18,34 @@
     "copy-vscode-profile": false,
     "seed-ai-context": true,
     "include-test-framework": false
+  },
+  "launch": {
+    "default": "claude",
+    "profiles": {
+      "claude": {
+        "host": "iterm",
+        "group": "open",
+        "label": "Claude",
+        "cmd": "cd '{path}' && claude --dangerously-skip-permissions"
+      },
+      "vscode": {
+        "host": "kp-log",
+        "group": "open",
+        "label": "VS Code",
+        "cmd": "{kpinstall} open-vscode '{path}'"
+      },
+      "rename": {
+        "host": "kp-log",
+        "cmd": "{kpinstall} rename '{path}'",
+        "label": "Rename…",
+        "group": "admin"
+      },
+      "archive": {
+        "host": "kp-log",
+        "cmd": "{kpinstall} archive '{path}'",
+        "label": "Archive",
+        "group": "admin"
+      }
+    }
   }
 }
