@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "project": {
+    "uid": "p8e9fcdb2",
+    "name": "DirectTalk",
+    "description": "An app to allow two macs on the same network to share a common message buffer"
+  },
+  "milestones": [
+    {
+      "uid": "m3149bd3e",
+      "title": "Defined",
+      "goal": "The project is defined.",
+      "phases": [
+        {
+          "uid": "heb1ce6a0",
+          "title": "Define",
+          "goal": "Decide what the project is.",
+          "depends_on": [],
+          "steps": [
+            {
+              "uid": "sab3935e9",
+              "title": "Who it is for",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "Who uses it, and what can they do with it that they cannot do today?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            },
+            {
+              "uid": "s03c84d8a",
+              "title": "Platform and stack",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "What does it run on, and in which language and main frameworks is it written?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            },
+            {
+              "uid": "s89cf894e",
+              "title": "Data and state",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "What data does it keep, where is it stored, and who owns it?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            },
+            {
+              "uid": "sbe73368d",
+              "title": "Interfaces",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "How do people and other software reach it (UI, CLI, API, files), and what does it depend on?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            },
+            {
+              "uid": "s745608de",
+              "title": "Delivery",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "How is it built, tested, shipped and installed, and who runs it?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            },
+            {
+              "uid": "s48dd09f5",
+              "title": "Security and privacy",
+              "type": "decision",
+              "state": "pending",
+              "specified": false,
+              "intent": "What must it protect, from whom, and which credentials or personal data does it touch?",
+              "depends_on": [],
+              "checks": [],
+              "steps": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
