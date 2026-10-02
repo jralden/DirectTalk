@@ -7,8 +7,31 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const sessions = require('./sessions');
 
-const { PORT: BAKED_PORT } = require('./src/port.generated');
-const PORT = Number(process.env.PORT) || BAKED_PORT;
+const FALLBACK_PORT = 5757;
+
+// Ask portmanager (owner = this server process) for DirectTalk's port. Called
+// by absolute path: Finder/launchd-launched apps don't have ~/.local/bin on
+// PATH. Falls back to 5757 if portmanager is missing or fails.
+function allocatePort() {
+  try {
+    const out = execFileSync(
+      path.join(os.homedir(), '.local/bin/portmanager'),
+      ['allocate', 'DirectTalk'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+    );
+    const port = JSON.parse(out).port;
+    if (Number.isInteger(port) && port > 0) return port;
+  } catch (e) {
+    /* portmanager missing or errored -- use the fallback */
+  }
+  return FALLBACK_PORT;
+}
+
+// Only allocate when run as the server; tests require() this module and must
+// not touch the port registry.
+const PORT =
+  Number(process.env.PORT) ||
+  (require.main === module ? allocatePort() : FALLBACK_PORT);
 
 // The Bonjour (.local) host name a client on the same LAN uses to reach this
 // host. Resolved once at startup -- it is stable for the process lifetime, so

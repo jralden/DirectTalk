@@ -40,7 +40,6 @@ cp "$ROOT/server.js"   "$APP/Contents/Resources/app/"
 cp "$ROOT/sessions.js" "$APP/Contents/Resources/app/"
 cp "$ROOT/index.html"  "$APP/Contents/Resources/app/"
 cp "$ROOT/package.json" "$APP/Contents/Resources/app/"
-cp -R "$ROOT/src"      "$APP/Contents/Resources/app/"
 
 # App icon (optional — built once and committed under assets/).
 if [ -f "$ROOT/assets/icon.icns" ]; then
@@ -57,22 +56,22 @@ RES="$HERE/../Resources"
 NODE="$RES/node"
 APP="$RES/app"
 
-PORT="$("$NODE" -e "process.stdout.write(String(require('$APP/src/port.generated').PORT))")"
-URL="http://localhost:$PORT"
-
-"$NODE" "$APP/server.js" &
+# The server picks its own port (via portmanager) and logs
+# "DirectTalk listening on <url>" once it accepts connections.
+LOG="$(mktemp)"
+"$NODE" "$APP/server.js" >"$LOG" 2>&1 &
 SRV=$!
-trap 'kill $SRV 2>/dev/null' EXIT INT TERM
+trap 'kill $SRV 2>/dev/null; rm -f "$LOG"' EXIT INT TERM
 
-# Wait (up to ~10s) for the server to accept connections before opening the UI.
+# Wait (up to ~10s) for the server to report it is listening before opening the UI.
+URL=""
 for _ in $(seq 1 50); do
-  if "$NODE" -e "require('http').get('$URL',r=>process.exit(0)).on('error',()=>process.exit(1))" 2>/dev/null; then
-    break
-  fi
+  URL="$(sed -n 's/^DirectTalk listening on //p' "$LOG")"
+  [ -n "$URL" ] && break
   sleep 0.2
 done
 
-open "$URL"
+open "${URL:-http://localhost:5757}"
 wait $SRV
 LAUNCH
 chmod +x "$APP/Contents/MacOS/DirectTalk"
